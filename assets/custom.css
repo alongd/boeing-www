@@ -1,0 +1,79 @@
+/* Custom styles beyond the compiled Tailwind stylesheet (assets/styles.css). */
+
+/* Technology section: "Fueling the future of <rotating word>" statement card,
+   replacing the airplane image in the same grid slot. */
+.tech-statement {
+  min-height: 320px;
+}
+
+.tech-heading {
+  font-size: clamp(20px, 8.5vw, 32px);
+  line-height: 1.15;
+}
+
+@media (min-width: 768px) {
+  .tech-heading {
+    font-size: 40px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .tech-heading {
+    font-size: 48px;
+  }
+}
+
+.tech-rotator {
+  --rotator-ms: 2200;
+  display: inline-grid;
+  vertical-align: bottom;
+  height: 1.15em;
+  overflow-y: hidden;
+  overflow-x: visible;
+}
+
+.tech-rotator .tech-word {
+  grid-row: 1;
+  grid-column: 1;
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+  white-space: nowrap;
+  align-self: start;
+}
+
+.tech-rotator .tech-word.is-active {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.tech-rotator .tech-word.is-leaving {
+  opacity: 0;
+  transform: translateY(-12px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tech-rotator .tech-word {
+    transition: opacity 0.5s ease;
+  }
+}
+
+/* The [hidden] attribute must win over any author display utility (Tailwind's
+   .flex / .inline-flex, or the inline-flex rule below) — otherwise elements
+   marked hidden by default still render. */
+[hidden] {
+  display: none !important;
+}
+
+/* PI icon links: 32x32 hit area, 16px glyph stays centered */
+[data-pi-links] {
+  gap: 0.25rem;
+}
+
+[data-pi-link] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+}
