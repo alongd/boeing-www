@@ -1,0 +1,127 @@
+/* Partners logo carousel — auto-scrolling marquee with edge fade, pause on hover/focus.
+   Base state (no JS, or reduced motion): static centered wrapped grid, no animation. */
+.marquee {
+  position: relative;
+  overflow: visible;
+}
+.marquee-track {
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  justify-content: center;
+  width: auto;
+  gap: 32px;
+}
+
+/* JS-enhanced state: seamless scrolling loop with edge fade. */
+.marquee.is-enhanced {
+  overflow: hidden;
+  opacity: 0;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent);
+  animation: marquee-fade-in 0.6s ease forwards;
+}
+@keyframes marquee-fade-in {
+  to { opacity: 1; }
+}
+.marquee.is-enhanced .marquee-track {
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+  width: max-content;
+  animation: marquee-scroll 50s linear infinite;
+}
+.marquee.is-enhanced:hover .marquee-track {
+  animation-play-state: paused;
+}
+.marquee.is-enhanced:has(:focus-visible) .marquee-track {
+  animation-play-state: paused;
+}
+@keyframes marquee-scroll {
+  to { transform: translateX(-50%); }
+}
+
+.partner-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 12px;
+  flex: none;
+}
+.partner-tile .tile {
+  width: 280px;
+  height: 150px;
+}
+.partner-tile .tile img {
+  max-height: 100%;
+  max-width: 100%;
+}
+.partner-tile .caption {
+  width: 280px;
+}
+
+@media (max-width: 640px) {
+  .partner-tile .tile {
+    width: 200px;
+    height: 110px;
+  }
+  .partner-tile .caption {
+    width: 200px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marquee.is-enhanced {
+    overflow: visible;
+    opacity: 1;
+    -webkit-mask-image: none;
+    mask-image: none;
+    animation: none;
+  }
+  .marquee.is-enhanced .marquee-track {
+    flex-wrap: wrap;
+    justify-content: center;
+    width: auto;
+    animation: none;
+  }
+}
+
+/* Full-bleed band: the loop runs edge to edge of the viewport with a wide, soft fade,
+   instead of being cut at the content container. */
+#partners {
+  overflow-x: clip;
+}
+.marquee.is-enhanced {
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  padding: 8px 0;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
+}
+@media (min-width: 1024px) {
+  .partner-tile .tile { width: 320px; height: 170px; }
+  .partner-tile .caption { width: 320px; }
+}
+
+.marquee.is-paused .marquee-track {
+  animation-play-state: paused;
+}
+.marquee-toggle {
+  display: block;
+  margin: 20px auto 0;
+  padding: 6px 16px;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: transparent;
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 13px;
+  cursor: pointer;
+}
+.marquee-toggle:hover {
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.5);
+}
+.marquee-toggle:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}

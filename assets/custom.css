@@ -25,9 +25,11 @@
 
 .tech-rotator {
   --rotator-ms: 2200;
-  display: inline-grid;
+  display: grid;
+  justify-content: center;
   vertical-align: bottom;
-  height: 1.15em;
+  /* Taller than the 1.15 line box so descenders (g, y) are not clipped. */
+  height: 1.4em;
   overflow-y: hidden;
   overflow-x: visible;
 }
@@ -40,6 +42,10 @@
   transition: opacity 0.5s ease, transform 0.5s ease;
   white-space: nowrap;
   align-self: start;
+  /* Block-level grid item with gradient bg-clip-text: its box must cover the
+     descenders, or they render transparent. */
+  line-height: 1.3;
+  padding-bottom: 0.1em;
 }
 
 .tech-rotator .tech-word.is-active {

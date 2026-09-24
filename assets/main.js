@@ -397,6 +397,18 @@
           a.setAttribute("href", url);
           a.removeAttribute("hidden");
           anyVisible = true;
+          var label;
+          if (kind === "website") {
+            label = links.websiteLabel
+              ? links.websiteLabel + " — website"
+              : name + " — research website";
+          } else if (kind === "linkedin") {
+            label = name + " on LinkedIn";
+          }
+          if (label) {
+            a.setAttribute("aria-label", label);
+            a.setAttribute("title", label);
+          }
         } else {
           a.setAttribute("hidden", "");
           a.removeAttribute("href");
