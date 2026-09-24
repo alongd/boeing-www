@@ -1,5 +1,14 @@
 /* Custom styles beyond the compiled Tailwind stylesheet (assets/styles.css). */
 
+/* Media section: article preview thumbnails, subtle zoom on card hover. */
+.media-thumb img {
+  transition: transform 0.3s ease;
+}
+
+a.group:hover .media-thumb img {
+  transform: scale(1.03);
+}
+
 /* Technology section: "Fueling the future of <rotating word>" statement card,
    replacing the airplane image in the same grid slot. */
 .tech-statement {
