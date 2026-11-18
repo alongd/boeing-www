@@ -52,7 +52,6 @@ STAFF_NAMES = [
     "Keren-Or Rosner",
     "Melad Atrash",
     "Victor Halperin",
-    "Jawan Muhamed",
 ]
 
 ALL_NAMES = PI_NAMES + STAFF_NAMES
