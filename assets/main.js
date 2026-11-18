@@ -2,7 +2,7 @@
 // (1) mobile nav menu toggle + slide animation
 // (2) scroll-triggered "whileInView" reveal animations
 // (3) page-load hero animations
-// (4) technology section rotating word
+// (4) about section rotating word
 // (5) PI website/LinkedIn links
 // (6) footer year
 // No dependencies. Scripts run at the end of <body>, so each feature initializes
@@ -225,11 +225,11 @@
   }
 })();
 
-// ---------- Technology section: rotating word ----------
+// ---------- About section: rotating word ----------
 (function () {
   "use strict";
   try {
-    var container = document.querySelector('[data-anim="tech-image"]');
+    var container = document.querySelector(".rotator-statement");
     var rotatorEl = container ? container.querySelector(".tech-rotator") : document.querySelector(".tech-rotator");
     var words = rotatorEl ? rotatorEl.querySelectorAll(".tech-word") : [];
     if (!rotatorEl || !words.length) return;

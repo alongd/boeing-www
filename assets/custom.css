@@ -9,10 +9,14 @@ a.group:hover .media-thumb img {
   transform: scale(1.03);
 }
 
-/* Technology section: "Fueling the future of <rotating word>" statement card,
-   replacing the airplane image in the same grid slot. */
-.tech-statement {
-  min-height: 320px;
+/* About section: full-width "Fueling the future of <rotating word>" statement.
+   One line from tablet width up; the rotator stacks under the lead-in on phones. */
+@media (min-width: 768px) {
+  .rotator-statement .tech-rotator {
+    display: inline-grid;
+    justify-items: start;
+    vertical-align: baseline;
+  }
 }
 
 .tech-heading {
@@ -117,3 +121,11 @@ a:focus-visible, button:focus-visible, [tabindex]:focus-visible {
   html { scroll-behavior: auto !important; }
   [data-anim] { transition: none !important; opacity: 1 !important; transform: none !important; }
 }
+
+/* SAF process animation (assets/saf-animation.js) */
+.saf-anim { position: relative; min-height: 320px; margin: 0; }
+.saf-anim .saf-anim__canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.saf-anim .saf-anim__caption { position: absolute; left: 0; right: 0; bottom: 14px; text-align: center; padding: 0 16px; font-size: 15px; font-weight: 600; letter-spacing: 0.02em; color: #e6efff; text-shadow: 0 1px 6px rgba(0, 10, 30, 0.7); opacity: 0; pointer-events: none; }
+.saf-anim .saf-anim__btn { position: absolute; top: 10px; right: 10px; z-index: 2; padding: 4px 12px; font-size: 12px; line-height: 1.4; color: #e6efff; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(207, 227, 255, 0.4); border-radius: 999px; cursor: pointer; }
+.saf-anim .saf-anim__btn:hover { background: rgba(255, 255, 255, 0.2); }
+.saf-anim .saf-anim__btn:focus-visible { outline: 2px solid #cfe3ff; outline-offset: 2px; }
