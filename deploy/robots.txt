@@ -1,0 +1,10 @@
+# @SITE@/robots.txt
+#
+# Static site — everything published here is meant to be found. Dev-only files
+# are not uploaded at all (scripts/build_deploy.py ships an allowlist), so there
+# is nothing to hide with Disallow rules.
+
+User-agent: *
+Allow: /
+
+Sitemap: @SITE@/sitemap.xml

@@ -1,0 +1,156 @@
+# Deploying OVERWRITES the server's .htaccess with this file; nothing is merged
+# at upload time. The Dana Research Group site, on the same Technion platform,
+# found a cPanel-generated block already in public_html/.htaccess on its first
+# deploy and committed it at the top of its copy:
+#
+#   # BEGIN cPanel-generated php ini directives, do not edit
+#   ... <IfModule php8_module> / <IfModule lsapi_module> php_value error_log ...
+#   # END cPanel-generated php ini directives, do not edit
+#
+# Before the first upload here, open public_html/.htaccess in cPanel's File
+# Manager. If it carries that block, paste it verbatim above this comment, or
+# the MultiPHP INI Editor's settings are lost on the next deploy. The block is
+# per account (it names /home/<account>/logs), so it is not copied from the
+# Dana site. The site is static and runs no PHP; the block only sets the log.
+
+
+# Boeing–Technion SAF Innovation Center — https://boeing.technion.ac.il/
+#
+# Apache configuration for Technion central hosting (web3cloud, cPanel),
+# mirroring the Dana Research Group site (dana.technion.ac.il) on the same
+# platform. SITE in scripts/build_deploy.py is the single source for the
+# canonical host; a verify gate fails the build if a page disagrees.
+#
+# Directives that depend on an optional module are wrapped in <IfModule>, so an
+# unloaded module skips the block instead of erroring.
+#
+# CAUTION — <IfModule> guards module PRESENCE, not permission. If CIS has
+# restricted `AllowOverride`, a directive we are not allowed to use returns
+# "500 Internal Server Error" for the whole site; it is NOT ignored. This file
+# needs the FileInfo override (ErrorDocument, AddType, AddDefaultCharset,
+# Header, AddOutputFilterByType), Options (`Options -Indexes`), Indexes (the
+# mod_expires directives) and AuthConfig (`Require all denied`). All four were
+# verified permitted on the Dana account on 13 Aug 2026.
+#
+# If a future host DOES 500 right after an upload, that is the cause, not a
+# typo. Bisect by commenting out whole sections from the BOTTOM up (security
+# headers → caching → compression → hardening → error pages), not line by line.
+#
+# EDGE vs ORIGIN — the public hostname sits behind Technion's F5 load balancer,
+# which adds HSTS and X-Frame-Options at the edge. This account's own Apache is
+# the ORIGIN and adds none of them, which is how a Nessus scan of the Dana
+# origin caught plugin 142960 (HSTS missing) on tcp/443. Measure the origin,
+# not the edge.
+#
+# Deliberately NOT in this file:
+#   * HTTP→HTTPS redirect. A naive `RewriteCond %{HTTPS} off` redirect becomes
+#     an infinite loop the moment a TLS-terminating proxy forwards to the origin
+#     over plain HTTP, which is exactly what the F5 does. It belongs in the
+#     vhost or on the F5; raise it with CIS.
+#   * X-Frame-Options — the F5 already sends SAMEORIGIN on the public hostname,
+#     and `frame-ancestors 'self'` in the CSP below covers modern browsers.
+#   * Retired-URL 410 rules. The Dana site returns 410 for the URLs of the
+#     WordPress site it replaced. If boeing.technion.ac.il served an earlier
+#     site, add its old indexed URLs here the same way.
+
+
+# ---------------------------------------------------------------- error pages
+ErrorDocument 404 /404.html
+
+
+# ------------------------------------------------------------------- hardening
+# Never list the contents of a directory that has no index file.
+<IfModule mod_autoindex.c>
+  Options -Indexes
+</IfModule>
+
+# Don't serve the dotfiles a careless upload might leave behind.
+<IfModule mod_authz_core.c>
+  <FilesMatch "^\.">
+    Require all denied
+  </FilesMatch>
+</IfModule>
+
+
+# ------------------------------------------------------------ types & charset
+AddDefaultCharset UTF-8
+
+<IfModule mod_mime.c>
+  AddType image/svg+xml  .svg
+  AddType image/webp     .webp
+  AddType font/woff2     .woff2
+</IfModule>
+
+
+# ------------------------------------------------------------------ compression
+# Text compresses ~4x; styles.css drops to about a quarter on the wire. Images
+# and woff2 are already compressed; recompressing them only burns CPU.
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/plain text/css text/xml
+  AddOutputFilterByType DEFLATE application/javascript application/x-javascript
+  AddOutputFilterByType DEFLATE application/json application/xml
+  AddOutputFilterByType DEFLATE application/ld+json
+  AddOutputFilterByType DEFLATE image/svg+xml
+</IfModule>
+
+
+# ----------------------------------------------------------------- caching
+# NOTE ON LIFETIMES: asset filenames here are NOT content-hashed. If you
+# replace assets/img/foo.jpg with a new image under the same name, anyone who
+# already visited keeps the old one until their cache expires — bump its ?v=N
+# in index.html. That is why images and scripts get a month rather than a year.
+# Fonts get a year because a given woff2 file genuinely never changes.
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresDefault                       "access plus 1 week"
+
+  # HTML must always revalidate, or an edit would be invisible for days.
+  ExpiresByType text/html              "access plus 0 seconds"
+
+  ExpiresByType font/woff2             "access plus 1 year"
+  ExpiresByType image/png              "access plus 1 month"
+  ExpiresByType image/jpeg             "access plus 1 month"
+  ExpiresByType image/webp             "access plus 1 month"
+  ExpiresByType image/gif              "access plus 1 month"
+  ExpiresByType image/svg+xml          "access plus 1 month"
+  ExpiresByType text/css               "access plus 1 month"
+  ExpiresByType application/javascript "access plus 1 month"
+  ExpiresByType application/json       "access plus 1 day"
+  ExpiresByType application/xml        "access plus 1 day"
+</IfModule>
+
+<IfModule mod_headers.c>
+  <FilesMatch "\.html$">
+    Header set Cache-Control "no-cache, must-revalidate"
+  </FilesMatch>
+</IfModule>
+
+
+# ----------------------------------------------------------- security headers
+<IfModule mod_headers.c>
+  # HSTS — Nessus plugin 142960. Tells the browser to use HTTPS for this host
+  # for a year. `preload` is deliberately absent: it submits the name to a
+  # browser-vendor list, is slow to undo, and is not ours to decide for a
+  # technion.ac.il name. The expr= guard emits it only over TLS (RFC 6797: a
+  # browser MUST ignore HSTS over plain HTTP), and stops a second, conflicting
+  # copy once the F5 terminates TLS and adds its own.
+  Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains" "expr=%{HTTPS} == 'on'"
+
+  # Don't let a browser guess a file's type against what we declared.
+  Header always set X-Content-Type-Options "nosniff"
+
+  # Send the full URL only to ourselves; other sites see the origin at most.
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+
+  # This site needs none of these capabilities; refuse them up front.
+  Header always set Permissions-Policy "geolocation=(), microphone=(), camera=(), payment=(), usb=()"
+
+  # Content-Security-Policy — the browser ENFORCES that the site loads nothing
+  # from a third party except the frames listed. @CSP@ is filled in by
+  # scripts/build_deploy.py from its THIRD_PARTY table: the Vimeo video and the
+  # Google Maps embed are the only third-party frames. Fonts are self-hosted
+  # (assets/vendor/fonts). 'unsafe-inline' stays for the inline style=""
+  # attributes the compiled Tailwind markup carries; the source allowlist is
+  # the real protection.
+  Header always set Content-Security-Policy "@CSP@"
+</IfModule>

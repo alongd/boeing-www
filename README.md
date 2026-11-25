@@ -29,3 +29,26 @@ spreadsheet:
 5. Commit the regenerated `assets/pi-links.js` (but not `data/pi-links.xlsx`, which stays local).
 
 Requires `openpyxl` (`pip install openpyxl`) if not already installed.
+
+## Deploying to Technion hosting
+
+GitHub Pages serves the repo as-is. For Technion central hosting (web3cloud, cPanel), build a
+clean upload bundle instead of uploading the repo:
+
+```
+python3 scripts/build_deploy.py 1.0.0
+```
+
+This writes `../Boeing-www-deploy-staging/v1.0.0/` beside the checkout, plus a `www.zip` of the
+same tree. Only an allowlist ships: `index.html`, `assets/`, and the files in `deploy/`
+(`.htaccess`, `404.html`, `robots.txt`). The build adds a generated `sitemap.xml`, a canonical
+URL, Open Graph tags and JSON-LD. It fails if a page fetches a third party that is not in the CSP,
+or references a file the bundle lacks. Upload the folder's contents, including the hidden
+`.htaccess`, into `public_html`.
+
+- `SITE` in `scripts/build_deploy.py` is the canonical host, `https://boeing.technion.ac.il`.
+- The bundle self-hosts Inter and Plus Jakarta Sans from `deploy/vendor/fonts/` and drops the
+  Google Fonts `@import` from its copy of `styles.css`, so the CSP allows no font CDN. The repo
+  itself, and so GitHub Pages, still loads them from Google Fonts.
+- `deploy/.htaccess` mirrors the Dana Research Group site on the same platform. Before the first
+  upload, read its opening comment about the cPanel-generated block.
