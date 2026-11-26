@@ -370,7 +370,7 @@
   }
 })();
 
-// ---------- Team/PI website + LinkedIn links ----------
+// ---------- Team/PI website, LinkedIn and video links ----------
 (function () {
   "use strict";
   try {
@@ -386,7 +386,8 @@
 
     document.querySelectorAll("[data-pi]").forEach(function (card) {
       var name = card.getAttribute("data-pi");
-      var links = (window.PI_LINKS && window.PI_LINKS[name]) || {};
+      var links = Object.assign({}, (window.PI_LINKS && window.PI_LINKS[name]) || {});
+      links.video = window.PI_VIDEOS && window.PI_VIDEOS[name];
       var row = card.querySelector("[data-pi-links]");
       if (!row) return;
       var anyVisible = false;
@@ -404,6 +405,8 @@
               : name + " — research website";
           } else if (kind === "linkedin") {
             label = name + " on LinkedIn";
+          } else if (kind === "video") {
+            label = "Watch a video of " + name;
           }
           if (label) {
             a.setAttribute("aria-label", label);
@@ -419,6 +422,128 @@
     });
   } catch (err) {
     /* PI links init failed; markup stays hidden by default */
+  }
+})();
+
+// ---------- Video overlay (researcher videos) ----------
+// Ported from the Dana Research Group site. A click on a [data-pi-link="video"] icon opens
+// the YouTube video in a modal dialog; without JS the icon is a plain link to YouTube.
+(function () {
+  "use strict";
+  try {
+    var modal = document.getElementById("vmodal");
+    var frame = document.getElementById("vmodal-frame");
+    var closeBtn = document.getElementById("vmodal-close");
+    if (!modal || !frame || !closeBtn) return;
+    var lastTrigger = null; // element to restore focus to when the dialog closes
+    var inerted = []; // background elements made inert while the dialog is open
+
+    // With everything behind the dialog inert, the only focusable elements left are the
+    // close button and the YouTube iframe, so Tab can't escape the dialog even from inside
+    // the cross-origin iframe, where the keydown trap below can't see it.
+    function setBackgroundInert(on) {
+      if (on) {
+        Array.prototype.forEach.call(document.body.children, function (el) {
+          if (el === modal || el.tagName === "SCRIPT" || el.classList.contains("drg-a11y")) return;
+          el.setAttribute("inert", "");
+          el.setAttribute("aria-hidden", "true");
+          inerted.push(el);
+        });
+      } else {
+        inerted.forEach(function (el) {
+          el.removeAttribute("inert");
+          el.removeAttribute("aria-hidden");
+        });
+        inerted = [];
+      }
+    }
+
+    function focusables() {
+      return Array.prototype.slice
+        .call(modal.querySelectorAll('button, iframe, a[href], [tabindex]:not([tabindex="-1"])'))
+        .filter(function (el) {
+          return el.offsetParent !== null;
+        });
+    }
+
+    // YouTube video id from watch / youtu.be / embed / shorts URLs.
+    function ytId(href) {
+      var m =
+        /[?&]v=([\w-]{6,})/.exec(href) ||
+        /youtu\.be\/([\w-]{6,})/.exec(href) ||
+        /\/(?:embed|shorts)\/([\w-]{6,})/.exec(href);
+      return m ? m[1] : null;
+    }
+
+    function open(id, title) {
+      // youtube-nocookie sets no cookies until the visitor plays the video. YouTube checks
+      // the embedding origin; passing it avoids the "configuration error" (153).
+      var src =
+        "https://www.youtube-nocookie.com/embed/" + encodeURIComponent(id) + "?autoplay=1&rel=0&playsinline=1";
+      if (/^https?:$/.test(location.protocol)) src += "&origin=" + encodeURIComponent(location.origin);
+      var iframe = document.createElement("iframe");
+      iframe.src = src;
+      iframe.title = title || "Video";
+      iframe.allow = "autoplay; encrypted-media; picture-in-picture; fullscreen";
+      iframe.allowFullscreen = true;
+      frame.replaceChildren(iframe);
+      modal.setAttribute("aria-label", title || "Video player");
+      modal.classList.add("open");
+      modal.setAttribute("aria-hidden", "false");
+      document.body.style.overflow = "hidden";
+      setBackgroundInert(true);
+      closeBtn.focus();
+    }
+
+    function close() {
+      modal.classList.remove("open");
+      modal.setAttribute("aria-hidden", "true");
+      frame.replaceChildren(); // unload the iframe to stop playback
+      document.body.style.overflow = "";
+      setBackgroundInert(false);
+      if (lastTrigger) {
+        lastTrigger.focus();
+        lastTrigger = null;
+      }
+    }
+
+    document.addEventListener("click", function (e) {
+      var a = e.target.closest && e.target.closest('a[data-pi-link="video"][href]');
+      if (!a) return;
+      if (e.metaKey || e.ctrlKey || e.shiftKey || e.button) return; // modified click: open YouTube
+      if (location.protocol === "file:") return; // embeds can't load from file://
+      var id = ytId(a.getAttribute("href") || "");
+      if (!id) return; // unknown URL: follow the link
+      e.preventDefault();
+      lastTrigger = a;
+      open(id, a.getAttribute("aria-label"));
+    });
+    closeBtn.addEventListener("click", close);
+    modal.addEventListener("click", function (e) {
+      if (e.target === modal) close();
+    });
+    document.addEventListener("keydown", function (e) {
+      if (!modal.classList.contains("open")) return;
+      if (e.key === "Escape") {
+        close();
+        return;
+      }
+      if (e.key === "Tab") {
+        var f = focusables();
+        if (!f.length) return;
+        var first = f[0];
+        var last = f[f.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    });
+  } catch (err) {
+    /* overlay init failed; video icons fall back to opening YouTube */
   }
 })();
 

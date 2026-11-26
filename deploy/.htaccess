@@ -147,8 +147,9 @@ AddDefaultCharset UTF-8
 
   # Content-Security-Policy — the browser ENFORCES that the site loads nothing
   # from a third party except the frames listed. @CSP@ is filled in by
-  # scripts/build_deploy.py from its THIRD_PARTY table: the Vimeo video and the
-  # Google Maps embed are the only third-party frames. Fonts are self-hosted
+  # scripts/build_deploy.py from its THIRD_PARTY table: the Vimeo video, the
+  # Google Maps embed and the researcher videos (youtube-nocookie, loaded only
+  # when a visitor clicks a play icon) are the only third-party frames. Fonts are self-hosted
   # (assets/vendor/fonts). 'unsafe-inline' stays for the inline style=""
   # attributes the compiled Tailwind markup carries; the source allowlist is
   # the real protection.

@@ -44,7 +44,8 @@ ASSET_EXCLUDE = [re.compile(r"\.test\.js$")]
 # Every third-party origin the browser may fetch, by CSP directive. Anything
 # else fetched by a shipped page fails verify().
 THIRD_PARTY = {
-    "frame-src": ["https://player.vimeo.com", "https://www.google.com"],
+    "frame-src": ["https://player.vimeo.com", "https://www.google.com",
+                  "https://www.youtube-nocookie.com"],
 }
 FONT_IMPORT = re.compile(r'@import\s*"https://fonts\.googleapis\.com/[^"]*"\s*;?')
 
